@@ -1,25 +1,73 @@
-
-colors = 	{
-			0:{'R':0,'G':0,'B':0},
-			1:{'R':18,'G':90,'B':18},
-			2:{'R':0,'G':20,'B':2},
-			3:{'R':0,'G':0,'B':110},
-			4:{'R':2,'G':0,'B':20},
-			5:{'R':50,'G':0,'B':10},
-			6:{'R':50,'G':0,'B':0},
-			7:{'R':50,'G':20,'B':0},
-			8:{'R':100,'G':60,'B':0}
-			}
-
-			
-			
-import pyb, ure
+import pyb, ure, os
 from time import sleep			
 from pwm import ledpwm
 
-RedF = 200
-GreenF = 200
-BlueF = 200
+#=Utility=functions=======================================================================
+
+# Sets all LEDs to black
+def clear():
+	for led in pinconfig:
+		for pin in pinconfig[led]:
+			pinconfig[led][pin].pwm(0)
+
+# Sets one colour for all LEDs			
+def color(color,pwm):
+	for led in pinconfig:
+		pinconfig[led][color].pwm(pwm)
+
+# Rainbow function
+def rainbow(speed,repeats):
+	fademap = (100,20,10,1,0,1,10,20)
+	for i in range(0,repeats):
+		for step in range(0,8):
+			for led in range(0,8):			
+				pinconfig[(led+step)%8]['R'].pwm(fademap[led])
+				pinconfig[(led+step+4)%8]['G'].pwm(fademap[led])
+				pinconfig[(led+step+5)%8]['B'].pwm(fademap[led])
+			sleep(speed)
+
+# Fades a chosen colour up a defined number of times ( checking balance )			
+def fade(color,speed,repeats):
+	for intensity in range(0,101):
+		for led in pinconfig:
+			pinconfig[led][color].pwm(intensity)
+		sleep(speed)
+	
+			
+# Show horwitz colours in order on LEDs 1 to 8			
+def horwitz():
+	for i in range(0,8):
+		pinconfig[i]['R'].pwm(colors[i+1]['R']) 
+		pinconfig[i]['G'].pwm(colors[i+1]['G'])  
+		pinconfig[i]['B'].pwm(colors[i+1]['B'])   
+		
+#=Horwitz=Colours=========================================================================		
+
+# These are the set colours
+	
+colors = 	{
+				0:{	'R':100,	'G':100,	'B':100	},
+				1:{	'R':100,	'G':98, 	'B':100	},
+				2:{	'R':100,	'G':100,	'B':0	},
+				3:{	'R':100,	'G':100,	'B':90	},
+				4:{	'R':70,	'G':100,	'B':60	},
+				5:{	'R':0,	'G':100,	'B':100	},
+				6:{	'R':0,	'G':90,	'B':100	},
+				7:{	'R':0,	'G':70,	'B':100	},
+				8:{	'R':100,	'G':20,	'B':100	}
+			}
+	
+#=LED=Setup===============================================================================	
+#Each array of LEDs can have their own frequency bar P18 which is LED 3 Red which is fixed
+
+RedF = 100
+GreenF = 150
+BlueF = 75
+
+# This initialises all the pins by setting all the frequencies. The pwm Library makes sure
+# the right commands go to the right pins. Note that most of the pins share each others 
+# clocks and 'P18' has a fixed frequency so setting the frequency has no effect but has to
+# be there to not break the class assignment!
 
 pinconfig = {
 	0:{	'R':ledpwm('Y8',12,2,RedF),
@@ -56,57 +104,11 @@ pinconfig = {
 		}
 }
 
-def clear():
-	for led in pinconfig:
-		for pin in pinconfig[led]:
-			pinconfig[led][pin].pwm(0)
-			
-def color(color,pwm):
-	for led in pinconfig:
-		pinconfig[led][color].pwm(pwm)
-		
-def rainbow(speed,repeats):
-	fademap = (100,20,10,1,0,1,10,20)
-	for i in range(0,repeats):
-		for step in range(0,8):
-			for led in range(0,8):			
-				pinconfig[(led+step)%8]['R'].pwm(fademap[led])
-				pinconfig[(led+step+4)%8]['G'].pwm(fademap[led])
-				pinconfig[(led+step+5)%8]['B'].pwm(fademap[led])
-			sleep(speed)
-			
-def fade(color,speed,repeats):
-	for intensity in range(0,101):
-		for led in pinconfig:
-			pinconfig[led][color].pwm(intensity)
-		sleep(speed)
-	
-			
-			
-def horwitz():
-	pinconfig[1]['R'].pwm(95)
-	pinconfig[2]['R'].pwm(95)
-	pinconfig[2]['B'].pwm(25)
-	pinconfig[3]['B'].pwm(95)
-	pinconfig[4]['B'].pwm(95)
-	pinconfig[4]['G'].pwm(75)
-	pinconfig[5]['G'].pwm(95)
-	pinconfig[6]['G'].pwm(95)
-	pinconfig[6]['R'].pwm(95)
-	pinconfig[7]['R'].pwm(95)
-	pinconfig[7]['G'].pwm(50)
-	pinconfig[8]['R'].pwm(95)
-	pinconfig[8]['G'].pwm(10) 
+#=Main=Program============================================================================			
 
 clear()
 
-for i in range(8):
-	for color in colors[i]:
-		pinconfig[i][color].pwm(colors[i][color]) 
-		#print('LED',i,'is',,)
-
-			
-sequence = open('data.txt','r')
+sequences = [elem for elem in os.listdir('sequences') if elem[0] != '.']
 
 # Open the data text file, it runs through the sequence a line at a time, first it checks
 # if the line is 'commented' out with a # or if its a blank line to ignore. Then it checks it
@@ -115,48 +117,50 @@ sequence = open('data.txt','r')
 
 sequenceDivide = False
 seqStep = 0
+cache_sequence = ()
 
+#group 0 : all
+#group 1 : all of the variable ( speed or loop )
+#group 2 : variable bits (dont use)
+#group 3 : variable name
+#group 4 : 
+#group 5 : variable value
+#group 6 : sequence step values
+#group 7 : led1
+#group 8 : led2
+#group 9 : led3
+#group 10 : led4
+#group 11 : led5
+#group 12 : led6
+#group 13 : led7
+#group 14 : led8
+#group 15 : plain text
 
+# This loop opens the text file
+seqArray = []
+loadNextSeq = True
+speed = 0
 
+while True:
+	for sequence in sequences:
+		with open("sequences/%s" % sequence) as datatxtLine:
 
-
-with open("data.txt") as sequence:
-	for line in sequence:
-		if ure.match('#',line) == None or ure.match('\n',line) == None:
-		
-			if ure.match('[0-9]',line) == None : 
-			
-				#if line != ure.match(' *speed',line) or line != ure.match(' *loop',line):
-				#	if sequenceDivide == False:
-				#		sequenceDivide = True
-				#		repeats = 0
-				#		startPoint = seqStep
-				#	elif repeats == loop:
-				#		sequenceDivide == False:
-				#		
-				#		break
-				#	else:
-				#		repeats = repeats + 1	
-			
-				speedvar = ure.match('speed *= *(\.?[0-9]*)',line)
-				loopvar = ure.match('loop *= *([0-9]*)',line)
-				if speedvar != None:
-					delay = float(speedvar.group(1))
-					print('Step Delay is', delay)
-				elif loopvar != None:
-					loop = int(loopvar.group(1))
-					#print('This sequence will loop', loop,'times')
-					
-			# This is compact so hard to understand, first checks if it is not an empty newline.
-			
-			else:
-				step = 	ure.match('([0-8]) *([0-8]) *([0-8]) *([0-8]) *([0-8]) *([0-8]) *([0-8]) *([0-8])',line)
-				for led in pinconfig:
-					for color in pinconfig[led]:
-						pinconfig[led][color].pwm(colors[int(step.group(led+1))][color])
-						#print('LED',led,'(',color,')','is',step.group(led+1) )
-				seqStep = seqStep + 1
-				sleep(delay)
-
-
+			for lineNumber,line in enumerate(datatxtLine): 
 	
+					# Skip blank lines
+					if ure.match('#|\n',line) == None: 
+				
+						# Use regular expressions to compile information into variables
+						lineRead = ure.match(' *(((speed)|(loop)) *= *([\.0-9]*))?( *([0-9]) *([0-9]) *([0-9]) *([0-9]) *([0-9]) *([0-9]) *([0-9]) *([0-9])*)?([- a-zA-Z0-9\(\)]*)',line)
+				
+						if lineRead.group(2) == 'speed':
+							speed = float(lineRead.group(5))
+						elif lineRead.group(2) == 'loop':
+							loop = lineRead.group(5)
+						elif lineRead.group(14) != None:
+							for i in range(0,8):
+								pinconfig[i]['R'].pwm(colors[int(lineRead.group(i+7))]['R']) 
+								pinconfig[i]['G'].pwm(colors[int(lineRead.group(i+7))]['G'])  
+								pinconfig[i]['B'].pwm(colors[int(lineRead.group(i+7))]['B'])
+							print('%s : Line - %d' % (sequence, lineNumber))
+							sleep(speed)
