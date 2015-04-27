@@ -23,9 +23,9 @@ def rainbow(speed,repeats):
   for i in range(0,repeats):
     for step in range(0,8):
       for led in range(0,8):
-      pinconfig[(led+step)%8]['R'].pwm(fademap[led])
-      pinconfig[(led+step+4)%8]['G'].pwm(fademap[led])
-      pinconfig[(led+step+5)%8]['B'].pwm(fademap[led])
+        pinconfig[(led+step)%8]['R'].pwm(fademap[led])
+        pinconfig[(led+step+4)%8]['G'].pwm(fademap[led])
+        pinconfig[(led+step+5)%8]['B'].pwm(fademap[led])
       sleep(speed)
 
 # Fades a chosen colour up a defined number of times ( checking balance between leds )

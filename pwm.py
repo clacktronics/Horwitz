@@ -26,8 +26,8 @@ class ledpwm:
     if self.pin == 'X5' or self.pin == 'X6':
       b = self.buf # cache buf variable for speed
       pwm = PWM * len(b) // 100
-        for i in range(len(b)):
-          b[i] = 255 if i < pwm else 0
+      for i in range(len(b)):
+        b[i] = 255 if i < pwm else 0
     elif self.pin == 'P18':
       PWM = self.map(PWM,0,100,0,256)
       self.ch.intensity(PWM)
