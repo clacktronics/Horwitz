@@ -156,9 +156,9 @@ while True:
         if ure.match('#|\n',line) == None: 
           
           # Use regular expressions to compile information into variables
-          lineRead = ure.match(' *(((speed)|(loop)) *= *([\.0-9]*))?( *([0-9]) *([0-9]) *([0-9]) *([0-9]) *([0-9]) *([0-9]) *([0-9]) *([0-9])*)?([- a-zA-Z0-9\(\)]*)',line)
+          lineRead = ure.match(' *(((beat)|(loop)) *= *([\.0-9]*))?( *([0-9]) *([0-9]) *([0-9]) *([0-9]) *([0-9]) *([0-9]) *([0-9]) *([0-9])*)?([- a-zA-Z0-9\(\)]*)',line)
           
-          if lineRead.group(2) == 'speed':
+          if lineRead.group(2) == 'beat':
             speed = float(lineRead.group(5))
           elif lineRead.group(2) == 'loop':
             loop = lineRead.group(5)
