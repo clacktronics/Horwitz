@@ -1,0 +1,4 @@
+# gap for in-between sequences
+work = 0
+beat = 10s
+0 0 0 0 0 0 0 0

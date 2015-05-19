@@ -1,3 +1,0 @@
-# gap for in-between sequences
-beat = 10s
-0 0 0 0 0 0 0 0

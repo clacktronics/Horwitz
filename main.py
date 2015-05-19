@@ -113,11 +113,31 @@ pinconfig = {
 }
 }
 
+# Work illumination pins
+
+work = {
+1 : pyb.Pin('Y5',pyb.Pin.OUT_PP), 
+2 : pyb.Pin('LED_GREEN',pyb.Pin.OUT_PP), 
+3 : pyb.Pin('X12',pyb.Pin.OUT_PP),
+4 : pyb.Pin('X11',pyb.Pin.OUT_PP)
+}
+
+for i in range(1,5):
+	work[i].high()
+
+def workToggle(workToTurnOn):
+	for i in range(1,5):
+		if i == workToTurnOn:
+			work[i].low()
+		else:
+			work[i].high()
+
 #=Main=Program============================================================================
 
 clear()
 
 sequences = [elem for elem in os.listdir('sequences') if elem[0] != '.']
+sequences.sort()
 
 # Open the data text file, it runs through the sequence a line at a time, first it checks
 # if the line is 'commented' out with a # or if its a blank line to ignore. Then it checks
@@ -156,12 +176,18 @@ while True:
         if ure.match('#|\n',line) == None: 
           
           # Use regular expressions to compile information into variables
-          lineRead = ure.match(' *(((beat)|(loop)) *= *([\.0-9]*))?( *([0-9]) *([0-9]) *([0-9]) *([0-9]) *([0-9]) *([0-9]) *([0-9]) *([0-9])*)?([- a-zA-Z0-9\(\)]*)',line)
+          lineRead = ure.match(' *(((beat)|(loop)|work) *= *([\.0-9]*))?( *([0-9]) *([0-9]) *([0-9]) *([0-9]) *([0-9]) *([0-9]) *([0-9]) *([0-9])*)?([- a-zA-Z0-9\(\)]*)',line)
           
           if lineRead.group(2) == 'beat':
             speed = float(lineRead.group(5))
           elif lineRead.group(2) == 'loop':
             loop = lineRead.group(5)
+          elif lineRead.group(2) == 'work':
+            print('illuminating %s' % lineRead.group(5))
+            workPlaying = int(lineRead.group(5))
+            workToggle(workPlaying)
+
+            	
           elif lineRead.group(14) != None:
             for i in range(0,8):
               pinconfig[i]['R'].pwm(colors[int(lineRead.group(i+7))]['R']) 
